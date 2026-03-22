@@ -1,0 +1,10 @@
+{
+  "projectId": "steaimage",
+  "appId": "1:453913404314:web:f950f945754b5c3bd4d023",
+  "apiKey": "AIzaSyBGV7E0ORhXbzs_HKFKL4c59T7KGjU7nQ8",
+  "authDomain": "steaimage.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "steaimage.firebasestorage.app",
+  "messagingSenderId": "453913404314",
+  "measurementId": "G-B770SLRWNF"
+}

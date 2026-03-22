@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: userId (Firebase Auth UID)
+    // Fields:
+    //   - email: string (required)
+    //   - role: string (required, 'admin')
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: feedback
+    // Document ID: auto-generated
+    // Fields:
+    //   - name: string (optional)
+    //   - email: string (optional)
+    //   - message: string (required, size < 5000)
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: tool_settings
+    // Document ID: toolId (e.g., 'compress')
+    // Fields:
+    //   - toolName: string (required)
+    //   - isActive: bool (required)
+    //   - isFeatured: bool (required)
+    //   - updatedAt: timestamp (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        (request.auth.token.email == "ixaiahhanx@gmail.com" && request.auth.token.email_verified == true)
+      );
+    }
+
+    function isDocOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidFeedback(data) {
+      return data.keys().hasAll(['message', 'createdAt']) &&
+             data.message is string && data.message.size() > 0 && data.message.size() < 5000 &&
+             data.createdAt is timestamp &&
+             (!('name' in data) || (data.name is string && data.name.size() < 100)) &&
+             (!('email' in data) || (data.email is string && data.email.size() < 100));
+    }
+
+    function isValidToolSetting(data) {
+      return data.keys().hasAll(['toolName', 'isActive', 'isFeatured', 'updatedAt']) &&
+             data.toolName is string &&
+             data.isActive is bool &&
+             data.isFeatured is bool &&
+             data.updatedAt is timestamp;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'role', 'createdAt']) &&
+             data.email is string &&
+             data.role in ['admin', 'user'] &&
+             data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isDocOwner(userId) || isAdmin();
+      allow create: if isValidUser(request.resource.data) && ((isDocOwner(userId) && request.resource.data.role == 'user') || isAdmin());
+      allow update: if isValidUser(request.resource.data) && ((isDocOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Feedback collection
+    match /feedback/{feedbackId} {
+      allow read: if isAdmin();
+      allow create: if isValidFeedback(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    // Tool Settings collection
+    match /tool_settings/{toolId} {
+      allow read: if true; // Publicly readable to configure the app
+      allow create, update: if isAdmin() && isValidToolSetting(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

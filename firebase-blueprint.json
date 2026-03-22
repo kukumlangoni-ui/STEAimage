@@ -1,0 +1,53 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Admin user profile",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role", "createdAt"]
+    },
+    "Feedback": {
+      "title": "Feedback",
+      "description": "User feedback submission",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["message", "createdAt"]
+    },
+    "ToolSetting": {
+      "title": "ToolSetting",
+      "description": "Configuration for a specific tool",
+      "type": "object",
+      "properties": {
+        "toolName": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "isFeatured": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["toolName", "isActive", "isFeatured", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Admin user documents"
+    },
+    "/feedback/{feedbackId}": {
+      "schema": "Feedback",
+      "description": "User feedback collection"
+    },
+    "/tool_settings/{toolId}": {
+      "schema": "ToolSetting",
+      "description": "Tool configuration collection"
+    }
+  }
+}

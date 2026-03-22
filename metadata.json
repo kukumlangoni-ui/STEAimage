@@ -1,0 +1,5 @@
+{
+  "name": "STEAimage Mobile",
+  "description": "Professional browser-based image manipulation tools. 100% private, no server uploads.",
+  "requestFramePermissions": ["camera"]
+}
