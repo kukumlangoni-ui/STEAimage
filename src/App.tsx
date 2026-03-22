@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import AuthGuard from "./components/AuthGuard";
 import SetupGuide from "./components/SetupGuide";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { isSupabaseConfigured } from "./lib/supabaseClient";
 
 // Layouts
 import MainLayout from "./components/layout/MainLayout";
@@ -53,78 +55,80 @@ import AdminFeedback from "./pages/admin/Feedback";
 import AdminTools from "./pages/admin/ToolSettings";
 
 export default function App() {
-  const isConfigured = !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-  if (!isConfigured) {
+  // Show setup guide when Supabase env vars are missing
+  // isSupabaseConfigured is evaluated at build time by Vite
+  if (!isSupabaseConfigured) {
     return <SetupGuide />;
   }
 
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Admin Login */}
-          <Route path="/admin/login" element={<AdminLogin />} />
+    <ErrorBoundary>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            {/* Admin Login (outside MainLayout) */}
+            <Route path="/admin/login" element={<AdminLogin />} />
 
-          {/* Main App Routes */}
-          <Route element={<MainLayout />}>
-            <Route path="/" element={<Home />} />
-            <Route path="/tools" element={<AllTools />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+            {/* Main App Routes */}
+            <Route element={<MainLayout />}>
+              <Route path="/" element={<ErrorBoundary><Home /></ErrorBoundary>} />
+              <Route path="/tools" element={<ErrorBoundary><AllTools /></ErrorBoundary>} />
+              <Route path="/login" element={<ErrorBoundary><Login /></ErrorBoundary>} />
+              <Route path="/signup" element={<ErrorBoundary><Signup /></ErrorBoundary>} />
 
-            {/* Tool Routes */}
-            <Route path="/tools/compress" element={<CompressImage />} />
-            <Route path="/tools/resize" element={<ResizeImage />} />
-            <Route path="/tools/crop" element={<CropImage />} />
-            <Route path="/tools/convert-to-jpg" element={<ConvertToJpg />} />
-            <Route path="/tools/convert-from-jpg" element={<ConvertFromJpg />} />
-            <Route path="/tools/image-to-url" element={<ImageToUrl />} />
-            <Route path="/tools/image-to-pdf" element={<ImageToPdf />} />
-            <Route path="/tools/watermark" element={<WatermarkImage />} />
-            <Route path="/tools/rotate" element={<RotateImage />} />
-            <Route path="/tools/flip" element={<FlipImage />} />
-            <Route path="/tools/merge" element={<MergeImages />} />
-            <Route path="/tools/thumbnail" element={<ThumbnailGenerator />} />
-            <Route path="/tools/social-media" element={<SocialMediaResizer />} />
-            <Route path="/tools/remove-metadata" element={<RemoveMetadata />} />
-            <Route path="/tools/base64" element={<Base64Converter />} />
-            <Route path="/tools/format-detector" element={<FormatDetector />} />
-            <Route path="/tools/grid-splitter" element={<GridSplitter />} />
-            <Route path="/tools/add-text" element={<AddText />} />
-            <Route path="/tools/filters" element={<ImageFilters />} />
-            <Route path="/tools/border" element={<ImageBorder />} />
-            <Route path="/tools/metadata" element={<ImageMetadata />} />
-            <Route path="/tools/ocr" element={<ImageToText />} />
-            <Route path="/tools/favicon" element={<FaviconGenerator />} />
-            <Route path="/tools/to-svg" element={<ImageToSvg />} />
-            <Route path="/tools/to-ico" element={<ImageToIco />} />
-            <Route path="/tools/to-webp" element={<ImageToWebp />} />
-            <Route path="/tools/to-png" element={<ImageToPng />} />
-            <Route path="/tools/to-bmp" element={<ImageToBmp />} />
-            <Route path="/tools/to-tiff" element={<ImageToTiff />} />
-            <Route path="/tools/to-gif" element={<ImageToGif />} />
-            <Route path="/tools/to-jpg" element={<ImageToJpg />} />
-            <Route path="/tools/to-avif" element={<ImageToAvif />} />
-            <Route path="/tools/to-heic" element={<ImageToHeic />} />
+              {/* Tool Routes */}
+              <Route path="/tools/compress" element={<ErrorBoundary><CompressImage /></ErrorBoundary>} />
+              <Route path="/tools/resize" element={<ErrorBoundary><ResizeImage /></ErrorBoundary>} />
+              <Route path="/tools/crop" element={<ErrorBoundary><CropImage /></ErrorBoundary>} />
+              <Route path="/tools/convert-to-jpg" element={<ErrorBoundary><ConvertToJpg /></ErrorBoundary>} />
+              <Route path="/tools/convert-from-jpg" element={<ErrorBoundary><ConvertFromJpg /></ErrorBoundary>} />
+              <Route path="/tools/image-to-url" element={<ErrorBoundary><ImageToUrl /></ErrorBoundary>} />
+              <Route path="/tools/image-to-pdf" element={<ErrorBoundary><ImageToPdf /></ErrorBoundary>} />
+              <Route path="/tools/watermark" element={<ErrorBoundary><WatermarkImage /></ErrorBoundary>} />
+              <Route path="/tools/rotate" element={<ErrorBoundary><RotateImage /></ErrorBoundary>} />
+              <Route path="/tools/flip" element={<ErrorBoundary><FlipImage /></ErrorBoundary>} />
+              <Route path="/tools/merge" element={<ErrorBoundary><MergeImages /></ErrorBoundary>} />
+              <Route path="/tools/thumbnail" element={<ErrorBoundary><ThumbnailGenerator /></ErrorBoundary>} />
+              <Route path="/tools/social-media" element={<ErrorBoundary><SocialMediaResizer /></ErrorBoundary>} />
+              <Route path="/tools/remove-metadata" element={<ErrorBoundary><RemoveMetadata /></ErrorBoundary>} />
+              <Route path="/tools/base64" element={<ErrorBoundary><Base64Converter /></ErrorBoundary>} />
+              <Route path="/tools/format-detector" element={<ErrorBoundary><FormatDetector /></ErrorBoundary>} />
+              <Route path="/tools/grid-splitter" element={<ErrorBoundary><GridSplitter /></ErrorBoundary>} />
+              <Route path="/tools/add-text" element={<ErrorBoundary><AddText /></ErrorBoundary>} />
+              <Route path="/tools/filters" element={<ErrorBoundary><ImageFilters /></ErrorBoundary>} />
+              <Route path="/tools/border" element={<ErrorBoundary><ImageBorder /></ErrorBoundary>} />
+              <Route path="/tools/metadata" element={<ErrorBoundary><ImageMetadata /></ErrorBoundary>} />
+              <Route path="/tools/ocr" element={<ErrorBoundary><ImageToText /></ErrorBoundary>} />
+              <Route path="/tools/favicon" element={<ErrorBoundary><FaviconGenerator /></ErrorBoundary>} />
+              <Route path="/tools/to-svg" element={<ErrorBoundary><ImageToSvg /></ErrorBoundary>} />
+              <Route path="/tools/to-ico" element={<ErrorBoundary><ImageToIco /></ErrorBoundary>} />
+              <Route path="/tools/to-webp" element={<ErrorBoundary><ImageToWebp /></ErrorBoundary>} />
+              <Route path="/tools/to-png" element={<ErrorBoundary><ImageToPng /></ErrorBoundary>} />
+              <Route path="/tools/to-bmp" element={<ErrorBoundary><ImageToBmp /></ErrorBoundary>} />
+              <Route path="/tools/to-tiff" element={<ErrorBoundary><ImageToTiff /></ErrorBoundary>} />
+              <Route path="/tools/to-gif" element={<ErrorBoundary><ImageToGif /></ErrorBoundary>} />
+              <Route path="/tools/to-jpg" element={<ErrorBoundary><ImageToJpg /></ErrorBoundary>} />
+              <Route path="/tools/to-avif" element={<ErrorBoundary><ImageToAvif /></ErrorBoundary>} />
+              <Route path="/tools/to-heic" element={<ErrorBoundary><ImageToHeic /></ErrorBoundary>} />
 
-            {/* Protected Admin Routes */}
-            <Route
-              path="/admin/*"
-              element={
-                <AuthGuard>
-                  <Routes>
-                    <Route index element={<AdminDashboard />} />
-                    <Route path="dashboard" element={<AdminDashboard />} />
-                    <Route path="feedback" element={<AdminFeedback />} />
-                    <Route path="tools" element={<AdminTools />} />
-                  </Routes>
-                </AuthGuard>
-              }
-            />
-          </Route>
-        </Routes>
-      </Router>
-    </AuthProvider>
+              {/* Protected Admin Routes */}
+              <Route
+                path="/admin/*"
+                element={
+                  <AuthGuard>
+                    <Routes>
+                      <Route index element={<AdminDashboard />} />
+                      <Route path="dashboard" element={<AdminDashboard />} />
+                      <Route path="feedback" element={<AdminFeedback />} />
+                      <Route path="tools" element={<AdminTools />} />
+                    </Routes>
+                  </AuthGuard>
+                }
+              />
+            </Route>
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
