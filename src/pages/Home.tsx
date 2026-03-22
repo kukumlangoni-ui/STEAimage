@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../lib/supabaseClient";
+import { supabase, isSupabaseConfigured } from "../lib/supabaseClient";
 import {
   Link as LinkIcon,
   FileText,
@@ -71,8 +71,16 @@ export default function Home() {
     e.preventDefault();
     setIsSubmitting(true);
 
+    if (!isSupabaseConfigured || !supabase) {
+      console.warn('[STEAimage] Feedback skipped: Supabase not configured.');
+      setSubmitted(true);
+      setTimeout(() => setSubmitted(false), 5000);
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      const { error } = await supabase.from('feedback').insert([
+      const { error } = await supabase!.from('feedback').insert([
         {
           name: feedback.name || null,
           email: feedback.email || null,
