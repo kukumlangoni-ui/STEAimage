@@ -1,30 +1,47 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-let supabaseInstance: SupabaseClient | null = null;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
-export const getSupabase = (): SupabaseClient => {
-  if (supabaseInstance) return supabaseInstance;
+/**
+ * True only when both env vars are present and the URL looks valid.
+ * Gate all Supabase calls behind this flag so the app never crashes
+ * when running without a backend configuration.
+ */
+export const isSupabaseConfigured: boolean =
+  typeof supabaseUrl === 'string' &&
+  supabaseUrl.trim().length > 0 &&
+  supabaseUrl.startsWith('https://') &&
+  typeof supabaseAnonKey === 'string' &&
+  supabaseAnonKey.trim().length > 0;
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Real client — only created when properly configured
+let _client: SupabaseClient | null = null;
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    // We throw a clear error that can be caught by an ErrorBoundary or handled in the UI
-    throw new Error('SUPABASE_CONFIG_MISSING: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are required. Please add them in the Settings menu.');
+if (isSupabaseConfigured) {
+  try {
+    _client = createClient(supabaseUrl!, supabaseAnonKey!);
+  } catch (err) {
+    console.error('[STEAimage] Failed to initialise Supabase client:', err);
   }
+}
 
-  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
-  return supabaseInstance;
-};
-
-// We use a Proxy to maintain the same import syntax while deferring initialization
-export const supabase = new Proxy({} as SupabaseClient, {
-  get: (target, prop) => {
-    const client = getSupabase();
-    const value = (client as any)[prop];
-    if (typeof value === 'function') {
-      return value.bind(client);
-    }
-    return value;
+/**
+ * Returns the Supabase client or throws a descriptive error.
+ * Always gate calls behind isSupabaseConfigured.
+ */
+export function getSupabase(): SupabaseClient {
+  if (!_client) {
+    throw new Error(
+      'SUPABASE_NOT_CONFIGURED: Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY ' +
+      'to your Vercel project → Settings → Environment Variables, then redeploy.'
+    );
   }
-});
+  return _client;
+}
+
+/**
+ * Direct nullable reference.
+ * Will be null when env vars are missing/invalid.
+ */
+export const supabase: SupabaseClient | null = _client;
