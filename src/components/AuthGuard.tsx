@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { Loader2 } from 'lucide-react';
 
 interface AuthGuardProps {
@@ -13,16 +13,21 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) {
+      navigate('/admin/login', { replace: true });
+      setLoading(false);
+      return;
+    }
+
     const checkSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        
+
         if (!session) {
           navigate('/admin/login', { replace: true });
           return;
         }
 
-        // Only allow specific admin email
         if (session.user.email !== 'swahilitecheliteacademy@gmail.com') {
           await supabase.auth.signOut();
           navigate('/admin/login', { replace: true });
@@ -31,7 +36,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
         setAuthenticated(true);
       } catch (error) {
-        console.error('Auth check error:', error);
+        console.error('[STEAimage] Auth check error:', error);
         navigate('/admin/login', { replace: true });
       } finally {
         setLoading(false);
